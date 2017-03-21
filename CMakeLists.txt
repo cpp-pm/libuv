@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+project(libuv)
+
 include_directories(include src)
 set(SOURCES
   src/fs-poll.c
@@ -40,11 +42,12 @@ if(WIN32)
     src/win/winsock.c)
 else()
   if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    add_definitions(-D_GNU_SOURCE)
+    add_definitions(-D_GNU_SOURCE -D_POSIX_C_SOURCE=200112)
     set(SOURCES ${SOURCES}
       src/unix/linux-syscalls.c
       src/unix/linux-core.c
-      src/unix/linux-inotify.c)
+      src/unix/linux-inotify.c
+      src/unix/proctitle.c)
   elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     add_definitions(-D_DARWIN_USE_64_BIT_INODE=1 -D_DARWIN_UNLIMITED_SELECT=1)
     set(SOURCES ${SOURCES}
@@ -96,7 +99,7 @@ find_package(Threads)
 if(WIN32)
   target_link_libraries(uv ws2_32 psapi iphlpapi shell32 userenv)
 else()
-  target_link_libraries(uv ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
+  target_link_libraries(uv PUBLIC Threads::Threads ${CMAKE_DL_LIBS})
 endif()
 
 if (BUILD_SHARED_LIBS)
@@ -106,12 +109,65 @@ if (BUILD_SHARED_LIBS)
     INTERFACE USING_UV_SHARED)
 endif()
 
+# Layout. This works for all platforms:
+#   * <prefix>/lib/cmake/<PROJECT-NAME>
+#   * <prefix>/lib/
+#   * <prefix>/include/
+set(config_install_dir "lib/cmake/${PROJECT_NAME}")
+set(include_install_dir "include")
+
+set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+
+message("Building ${PROJECT_NAME}")
+
+# Configuration
+set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
+set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
+set(targets_export_name "${PROJECT_NAME}Targets")
+set(namespace "${PROJECT_NAME}::")
+
 install(TARGETS uv
-  EXPORT libuvConfig
+  EXPORT ${targets_export_name}
+  INCLUDES DESTINATION include
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib)
 
 install(DIRECTORY include/ DESTINATION include)
 
-install(EXPORT libuvConfig DESTINATION lib/cmake/libuv)
+# Include module with fuction 'write_basic_package_version_file'
+include(CMakePackageConfigHelpers)
+
+set(PROJECT_VERSION 2.0.0)
+
+# Configure '<PROJECT-NAME>ConfigVersion.cmake'
+# Note: PROJECT_VERSION is used as a VERSION
+write_basic_package_version_file(
+  "${version_config}" VERSION ${PROJECT_VERSION} COMPATIBILITY AnyNewerVersion
+  )
+
+# Configure '<PROJECT-NAME>Config.cmake'
+# Use variables:
+#   * targets_export_name
+#   * PROJECT_NAME
+configure_package_config_file(
+  "cmake/Config.cmake.in"
+  "${project_config}"
+  INSTALL_DESTINATION "${config_install_dir}"
+  )
+
+# Config
+#   * <prefix>/lib/cmake/libuv/libuvConfig.cmake
+#   * <prefix>/lib/cmake/libuv/libuvConfigVersion.cmake
+install(
+  FILES "${project_config}" "${version_config}"
+  DESTINATION "${config_install_dir}"
+  )
+
+# Config
+#   * <prefix>/lib/cmake/libuv/libuvTargets.cmake
+install(
+  EXPORT "${targets_export_name}"
+  NAMESPACE "${namespace}"
+  DESTINATION "${config_install_dir}"
+  )
