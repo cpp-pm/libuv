@@ -98,7 +98,7 @@ find_package(Threads)
 if(WIN32)
   target_link_libraries(uv ws2_32 psapi iphlpapi shell32 userenv)
 else()
-  target_link_libraries(uv ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(uv ${CMAKE_THREAD_LIBS_INIT} dl)
 endif()
 
 if (BUILD_SHARED_LIBS)
