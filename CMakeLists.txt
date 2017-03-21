@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 
-# set(LIBUVDIR ${CMAKE_CURRENT_SOURCE_DIR})
-
 include_directories(include src)
 set(SOURCES
   src/fs-poll.c
@@ -98,7 +96,7 @@ find_package(Threads)
 if(WIN32)
   target_link_libraries(uv ws2_32 psapi iphlpapi shell32 userenv)
 else()
-  target_link_libraries(uv ${CMAKE_THREAD_LIBS_INIT} dl)
+  target_link_libraries(uv ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
 endif()
 
 if (BUILD_SHARED_LIBS)
