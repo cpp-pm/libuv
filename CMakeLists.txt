@@ -128,10 +128,10 @@ set(namespace "${PROJECT_NAME}::")
 
 install(TARGETS uv
   EXPORT ${targets_export_name}
-  INCLUDES DESTINATION include
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib)
+  ARCHIVE DESTINATION lib
+  INCLUDES DESTINATION include)
 
 install(DIRECTORY include/ DESTINATION include)
 
