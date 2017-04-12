@@ -13,7 +13,7 @@ set(SOURCES
   src/version.c)
 
 if(WIN32)
-  add_definitions(-DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0600 -D_CRT_SECURE_NO_WARNINGS)
+  add_definitions(-DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0600 -D_CRT_SECURE_NO_WARNINGS -Dsnprintf=_snprintf)
   include_directories(src/win)
   set(SOURCES ${SOURCES}
     src/win/async.c
@@ -99,14 +99,19 @@ find_package(Threads)
 if(WIN32)
   target_link_libraries(uv ws2_32 psapi iphlpapi shell32 userenv)
 else()
-  target_link_libraries(uv PUBLIC Threads::Threads ${CMAKE_DL_LIBS})
+  include(CheckCXXSymbolExists)
+  check_cxx_symbol_exists("clock_gettime" "time.h" _has_clock_gettime)
+  if (NOT _has_clock_gettime)
+    set(extra_libs rt)
+  endif()
+  set(extra_libs ${extra_libs} ${CMAKE_DL_LIBS})
+  target_link_libraries(uv PUBLIC Threads::Threads ${extra_libs})
 endif()
 
 if (BUILD_SHARED_LIBS)
   target_compile_definitions(
     uv
-    PRIVATE BUILDING_UV_SHARED
-    INTERFACE USING_UV_SHARED)
+    PRIVATE BUILDING_UV_SHARED)
 endif()
 
 # Layout. This works for all platforms:
