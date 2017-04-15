@@ -55,6 +55,8 @@ else()
       src/unix/darwin-proctitle.c
       src/unix/fsevents.c
       src/unix/kqueue.c
+      src/unix/pthread-barrier.c
+      src/unix/pthread-fixes.c
       src/unix/proctitle.c)
   elseif(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
     set(SOURCES ${SOURCES}
@@ -69,7 +71,9 @@ else()
   elseif(${CMAKE_SYSTEM_NAME} STREQUAL "SunOS")
     add_definitions(-D__EXTENSIONS__ -D_XOPEN_SOURCE=500)
     set(SOURCES ${SOURCES}
-      src/unix/sunos.c)
+      src/unix/sunos.c
+      src/unix/pthread-barrier.c
+      src/unix/pthread-fixes.c)
   endif()
 
   include_directories(src/unix)
@@ -105,9 +109,17 @@ else()
     if (NOT _has_clock_gettime)
       set(extra_libs rt)
     endif()
+  else()
+    set(extra_libs )
   endif()
+
   set(extra_libs ${extra_libs} ${CMAKE_DL_LIBS})
-  target_link_libraries(uv PUBLIC Threads::Threads ${extra_libs})
+
+  if (BUILD_SHARED_LIBS)
+    target_link_libraries(uv PRIVATE Threads::Threads ${extra_libs})
+  else()
+    target_link_libraries(uv PUBLIC Threads::Threads ${extra_libs})
+  endif()
 endif()
 
 if (BUILD_SHARED_LIBS)
