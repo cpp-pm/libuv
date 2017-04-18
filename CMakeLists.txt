@@ -13,7 +13,12 @@ set(SOURCES
   src/version.c)
 
 if(WIN32)
-  add_definitions(-DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0600 -D_CRT_SECURE_NO_WARNINGS -Dsnprintf=_snprintf)
+  include(CheckCXXSymbolExists)
+  check_cxx_symbol_exists("snprintf" "stdio.h" _has_snprintf)
+  if (NOT _has_snprintf)
+    add_definitions(-Dsnprintf=_snprintf)
+  endif()
+  add_definitions(-DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0600 -D_CRT_SECURE_NO_WARNINGS)
   include_directories(src/win)
   set(SOURCES ${SOURCES}
     src/win/async.c
@@ -90,6 +95,13 @@ else()
     src/unix/thread.c
     src/unix/tty.c
     src/unix/udp.c)
+
+  if (ANDROID)
+    set(SOURCES ${SOURCES}
+      src/unix/android-ifaddrs.c
+      src/unix/pthread-fixes.c
+      src/unix/pthread-barrier.c)
+  endif()
 endif()
 
 add_library(uv ${SOURCES})
