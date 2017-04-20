@@ -102,6 +102,10 @@ else()
 
   if (ANDROID)
     set(SOURCES ${SOURCES}
+      src/unix/linux-syscalls.c
+      src/unix/linux-core.c
+      src/unix/linux-inotify.c
+      src/unix/proctitle.c
       src/unix/android-ifaddrs.c
       src/unix/pthread-fixes.c
       src/unix/pthread-barrier.c)
