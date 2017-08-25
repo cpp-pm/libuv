@@ -32,6 +32,10 @@
 
 
 TEST_IMPL(ip6_addr_link_local) {
+#if defined(__CYGWIN__) || defined(__MSYS__)
+  /* FIXME: Does Cygwin support this?  */
+  RETURN_SKIP("FIXME: This test needs more investigation on Cygwin");
+#endif
   char string_address[INET6_ADDRSTRLEN];
   uv_interface_address_t* addresses;
   uv_interface_address_t* address;
@@ -139,3 +143,14 @@ TEST_IMPL(ip6_pton) {
 
 #undef GOOD_ADDR_LIST
 #undef BAD_ADDR_LIST
+
+#ifndef _WIN32
+TEST_IMPL(ip6_invalid_interface) {
+  struct sockaddr_in6 s;
+  int r;
+
+  r = uv_ip6_addr("::0%bad", 0, &s);
+  ASSERT(r < 0);
+  return 0;
+}
+#endif

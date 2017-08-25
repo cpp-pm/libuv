@@ -157,7 +157,7 @@ static connection_context_t* create_connection_context(
   context->sent_fin = 0;
   context->got_disconnect = 0;
 
-  r = uv_poll_init_socket(uv_default_loop(), &context->poll_handle, sock);
+  r = uv_poll_init(uv_default_loop(), &context->poll_handle, sock);
   context->open_handles++;
   context->poll_handle.data = context;
   ASSERT(r == 0);
@@ -449,7 +449,7 @@ static server_context_t* create_server_context(
   context->sock = sock;
   context->connections = 0;
 
-  r = uv_poll_init_socket(uv_default_loop(), &context->poll_handle, sock);
+  r = uv_poll_init(uv_default_loop(), &context->poll_handle, sock);
   context->poll_handle.data = context;
   ASSERT(r == 0);
 
@@ -574,6 +574,9 @@ static void start_poll_test(void) {
 
 
 TEST_IMPL(poll_duplex) {
+#if defined(NO_SELF_CONNECT)
+  RETURN_SKIP(NO_SELF_CONNECT);
+#endif
   test_mode = DUPLEX;
   start_poll_test();
   return 0;
@@ -581,6 +584,9 @@ TEST_IMPL(poll_duplex) {
 
 
 TEST_IMPL(poll_unidirectional) {
+#if defined(NO_SELF_CONNECT)
+  RETURN_SKIP(NO_SELF_CONNECT);
+#endif
   test_mode = UNIDIRECTIONAL;
   start_poll_test();
   return 0;
@@ -594,8 +600,10 @@ TEST_IMPL(poll_unidirectional) {
  */
 TEST_IMPL(poll_bad_fdtype) {
 #if !defined(__DragonFly__) && !defined(__FreeBSD__) && !defined(__sun) && \
-    !defined(_AIX) && !defined(__MVS__) && !defined(__FreeBSD_kernel__)
+    !defined(_AIX) && !defined(__MVS__) && !defined(__FreeBSD_kernel__) && \
+    !defined(__OpenBSD__) && !defined(__CYGWIN__) && !defined(__MSYS__)
   uv_poll_t poll_handle;
+  uv_os_fd_t handle;
   int fd;
 
 #if defined(_WIN32)
@@ -604,7 +612,8 @@ TEST_IMPL(poll_bad_fdtype) {
   fd = open(".", O_RDONLY);
 #endif
   ASSERT(fd != -1);
-  ASSERT(0 != uv_poll_init(uv_default_loop(), &poll_handle, fd));
+  handle = uv_get_osfhandle(fd);
+  ASSERT(0 != uv_poll_init(uv_default_loop(), &poll_handle, (uv_os_sock_t)handle)); /* bad cast on windows to allow passing an invalid SOCKET */
   ASSERT(0 == close(fd));
 #endif
 

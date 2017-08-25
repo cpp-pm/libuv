@@ -46,18 +46,15 @@ Data types
         Replacement function for :man:`free(3)`.
         See :c:func:`uv_replace_allocator`.
 
-.. c:type:: uv_file
+.. c:type:: uv_os_fd_t
 
     Cross platform representation of a file handle.
+    On Unix systems this is a `typedef` of `int` and on Windows a `HANDLE`.
 
 .. c:type:: uv_os_sock_t
 
     Cross platform representation of a socket handle.
-
-.. c:type:: uv_os_fd_t
-
-    Abstract representation of a file descriptor. On Unix systems this is a
-    `typedef` of `int` and on Windows a `HANDLE`.
+    On Unix systems this is a `typedef` of `int` and on Windows a `SOCKET`.
 
 .. c:type:: uv_rusage_t
 
@@ -143,7 +140,7 @@ Data types
 API
 ---
 
-.. c:function:: uv_handle_type uv_guess_handle(uv_file file)
+.. c:function:: uv_handle_type uv_guess_handle(uv_os_fd_t file)
 
     Used to detect what type of stream should be used with a given file
     descriptor. Usually this will be used during initialization to guess the
@@ -151,6 +148,9 @@ API
 
     For :man:`isatty(3)` equivalent functionality use this function and test
     for ``UV_TTY``.
+
+    STDIO file descriptor pseudo-handles ``UV_STDIN_FD``, ``UV_STDOUT_FD``, and ``UV_STDERR_FD``
+    can be passed to any uv_os_fd_t field for cross-platform support of stdio.
 
 .. c:function:: int uv_replace_allocator(uv_malloc_func malloc_func, uv_realloc_func realloc_func, uv_calloc_func calloc_func, uv_free_func free_func)
 
@@ -192,7 +192,11 @@ API
 
 .. c:function:: int uv_set_process_title(const char* title)
 
-    Sets the current process title.
+    Sets the current process title. On platforms with a fixed size buffer for the
+    process title the contents of `title` will be copied to the buffer and
+    truncated if larger than the available space. Other platforms will return
+    `UV_ENOMEM` if they cannot allocate enough space to duplicate the contents of
+    `title`.
 
 .. c:function:: int uv_resident_set_memory(size_t* rss)
 
@@ -245,6 +249,9 @@ API
 
     Convert a string containing an IPv6 addresses to a binary structure.
 
+    .. versionchanged:: 2.0.0: :man:`if_nametoindex(3)` errors are no longer
+                        ignored on Unix platforms.
+
 .. c:function:: int uv_ip4_name(const struct sockaddr_in* src, char* dst, size_t size)
 
     Convert a binary structure containing an IPv4 address to a string.
@@ -266,11 +273,19 @@ API
 
 .. c:function:: int uv_cwd(char* buffer, size_t* size)
 
-    Gets the current working directory.
+    Gets the current working directory, and stores it in `buffer`. If the
+    current working directory is too large to fit in `buffer`, this function
+    returns `UV_ENOBUFS`, and sets `size` to the required length, including the
+    null terminator.
 
     .. versionchanged:: 1.1.0
 
         On Unix the path no longer ends in a slash.
+
+    .. versionchanged:: 1.9.0 the returned length includes the terminating null
+                        byte on `UV_ENOBUFS`, and the buffer is null terminated
+                        on success.
+
 
 .. c:function:: int uv_chdir(const char* dir)
 
@@ -382,3 +397,49 @@ API
         stability guarantees.
 
     .. versionadded:: 1.8.0
+
+.. c:function:: int uv_os_getenv(const char* name, char* buffer, size_t* size)
+
+    Retrieves the environment variable specified by `name`, copies its value
+    into `buffer`, and sets `size` to the string length of the value. When
+    calling this function, `size` must be set to the amount of storage available
+    in `buffer`, including the null terminator. If the environment variable
+    exceeds the storage available in `buffer`, `UV_ENOBUFS` is returned, and
+    `size` is set to the amount of storage required to hold the value. If no
+    matching environment variable exists, `UV_ENOENT` is returned.
+
+    .. warning::
+        This function is not thread safe.
+
+    .. versionadded:: 1.12.0
+
+.. c:function:: int uv_os_setenv(const char* name, const char* value)
+
+    Creates or updates the environment variable specified by `name` with
+    `value`.
+
+    .. warning::
+        This function is not thread safe.
+
+    .. versionadded:: 1.12.0
+
+.. c:function:: int uv_os_unsetenv(const char* name)
+
+    Deletes the environment variable specified by `name`. If no such environment
+    variable exists, this function returns successfully.
+
+    .. warning::
+        This function is not thread safe.
+
+    .. versionadded:: 1.12.0
+
+.. c:function:: int uv_os_gethostname(char* buffer, size_t* size)
+
+    Returns the hostname as a null-terminated string in `buffer`, and sets
+    `size` to the string length of the hostname. When calling this function,
+    `size` must be set to the amount of storage available in `buffer`, including
+    the null terminator. If the hostname exceeds the storage available in
+    `buffer`, `UV_ENOBUFS` is returned, and `size` is set to the amount of
+    storage required to hold the value.
+
+    .. versionadded:: 1.12.0

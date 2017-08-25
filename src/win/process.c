@@ -20,10 +20,7 @@
  */
 
 #include <assert.h>
-#include <io.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <limits.h>
 #include <wchar.h>
 #include <malloc.h>    /* alloca */
@@ -32,9 +29,6 @@
 #include "internal.h"
 #include "handle-inl.h"
 #include "req-inl.h"
-
-
-#define SIGKILL         9
 
 
 typedef struct env_var {
@@ -148,8 +142,7 @@ static void uv_process_init(uv_loop_t* loop, uv_process_t* handle) {
   handle->child_stdio_buffer = NULL;
   handle->exit_cb_pending = 0;
 
-  uv_req_init(loop, (uv_req_t*)&handle->exit_req);
-  handle->exit_req.type = UV_PROCESS_EXIT;
+  UV_REQ_INIT(&handle->exit_req, UV_PROCESS_EXIT);
   handle->exit_req.data = handle;
 }
 

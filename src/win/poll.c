@@ -20,7 +20,6 @@
  */
 
 #include <assert.h>
-#include <io.h>
 
 #include "uv.h"
 #include "internal.h"
@@ -61,13 +60,13 @@ static void uv__init_overlapped_dummy(void) {
 }
 
 
-static OVERLAPPED* uv__get_overlapped_dummy() {
+static OVERLAPPED* uv__get_overlapped_dummy(void) {
   uv_once(&overlapped_dummy_init_guard_, uv__init_overlapped_dummy);
   return &overlapped_dummy_;
 }
 
 
-static AFD_POLL_INFO* uv__get_afd_poll_info_dummy() {
+static AFD_POLL_INFO* uv__get_afd_poll_info_dummy(void) {
   return &afd_poll_info_dummy_;
 }
 
@@ -505,12 +504,7 @@ static int uv__slow_poll_close(uv_loop_t* loop, uv_poll_t* handle) {
 }
 
 
-int uv_poll_init(uv_loop_t* loop, uv_poll_t* handle, int fd) {
-  return uv_poll_init_socket(loop, handle, (SOCKET) uv__get_osfhandle(fd));
-}
-
-
-int uv_poll_init_socket(uv_loop_t* loop, uv_poll_t* handle,
+int uv_poll_init(uv_loop_t* loop, uv_poll_t* handle,
     uv_os_sock_t socket) {
   WSAPROTOCOL_INFOW protocol_info;
   int len;
@@ -570,13 +564,11 @@ int uv_poll_init_socket(uv_loop_t* loop, uv_poll_t* handle,
 
   /* Initialize 2 poll reqs. */
   handle->submitted_events_1 = 0;
-  uv_req_init(loop, (uv_req_t*) &(handle->poll_req_1));
-  handle->poll_req_1.type = UV_POLL_REQ;
+  UV_REQ_INIT(&handle->poll_req_1, UV_POLL_REQ);
   handle->poll_req_1.data = handle;
 
   handle->submitted_events_2 = 0;
-  uv_req_init(loop, (uv_req_t*) &(handle->poll_req_2));
-  handle->poll_req_2.type = UV_POLL_REQ;
+  UV_REQ_INIT(&handle->poll_req_2, UV_POLL_REQ);
   handle->poll_req_2.data = handle;
 
   return 0;
