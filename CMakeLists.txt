@@ -6,9 +6,7 @@ include_directories(include src)
 set(SOURCES
   src/fs-poll.c
   src/inet.c
-  src/loop-watcher.c
   src/threadpool.c
-  src/timer.c
   src/uv-common.c
   src/version.c)
 
@@ -31,6 +29,7 @@ if(WIN32)
     src/win/getaddrinfo.c
     src/win/getnameinfo.c
     src/win/handle.c
+    src/win/loop-watcher.c
     src/win/pipe.c
     src/win/poll.c
     src/win/process.c
@@ -40,6 +39,7 @@ if(WIN32)
     src/win/stream.c
     src/win/tcp.c
     src/win/thread.c
+    src/win/timer.c
     src/win/tty.c
     src/win/udp.c
     src/win/util.c
@@ -49,36 +49,45 @@ else()
   if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     add_definitions(-D_GNU_SOURCE -D_POSIX_C_SOURCE=200112)
     set(SOURCES ${SOURCES}
-      src/unix/linux-syscalls.c
       src/unix/linux-core.c
       src/unix/linux-inotify.c
-      src/unix/proctitle.c)
+      src/unix/linux-syscalls.c
+      src/unix/procfs-exepath.c
+      src/unix/proctitle.c
+      src/unix/sysinfo-loadavg.c
+      src/unix/sysinfo-memory.c)
   elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     add_definitions(-D_DARWIN_USE_64_BIT_INODE=1 -D_DARWIN_UNLIMITED_SELECT=1)
     set(SOURCES ${SOURCES}
+      src/unix/bsd-ifaddrs.c
       src/unix/darwin.c
       src/unix/darwin-proctitle.c
       src/unix/fsevents.c
       src/unix/kqueue.c
-      src/unix/pthread-barrier.c
-      src/unix/pthread-fixes.c
       src/unix/proctitle.c)
   elseif(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
     set(SOURCES ${SOURCES}
-      src/unix/freebsd.c)
+      src/unix/bsd-ifaddrs.c
+      src/unix/freebsd.c
+      src/unix/kqueue.c
+      src/unix/posix-hrtime.c)
   elseif(${CMAKE_SYSTEM_NAME} STREQUAL "OpenBSD")
     set(SOURCES ${SOURCES}
-      src/unix/openbsd.c)
+      src/unix/bsd-ifaddrs.c
+      src/unix/kqueue.c
+      src/unix/openbsd.c
+      src/unix/posix-hrtime.c)
   elseif(${CMAKE_SYSTEM_NAME} STREQUAL "NetBSD")
     set(SOURCES ${SOURCES}
+      src/unix/bsd-ifaddrs.c
       src/unix/kqueue.c
-      src/unix/netbsd.c)
+      src/unix/netbsd.c
+      src/unix/posix-hrtime.c)
   elseif(${CMAKE_SYSTEM_NAME} STREQUAL "SunOS")
     add_definitions(-D__EXTENSIONS__ -D_XOPEN_SOURCE=500)
     set(SOURCES ${SOURCES}
-      src/unix/sunos.c
-      src/unix/pthread-barrier.c
-      src/unix/pthread-fixes.c)
+      src/unix/no-proctitle.c
+      src/unix/sunos.c)
   endif()
 
   include_directories(src/unix)
@@ -89,6 +98,7 @@ else()
     src/unix/fs.c
     src/unix/getaddrinfo.c
     src/unix/getnameinfo.c
+    src/unix/loop-watcher.c
     src/unix/loop.c
     src/unix/pipe.c
     src/unix/poll.c
@@ -97,18 +107,14 @@ else()
     src/unix/stream.c
     src/unix/tcp.c
     src/unix/thread.c
+    src/unix/timer.c
     src/unix/tty.c
     src/unix/udp.c)
 
   if (ANDROID)
     set(SOURCES ${SOURCES}
-      src/unix/linux-syscalls.c
-      src/unix/linux-core.c
-      src/unix/linux-inotify.c
-      src/unix/proctitle.c
       src/unix/android-ifaddrs.c
-      src/unix/pthread-fixes.c
-      src/unix/pthread-barrier.c)
+      src/unix/pthread-fixes.c)
   endif()
 endif()
 
