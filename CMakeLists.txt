@@ -46,7 +46,7 @@ if(WIN32)
     src/win/winapi.c
     src/win/winsock.c)
 else()
-  if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+  if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR ANDROID)
     add_definitions(-D_GNU_SOURCE -D_POSIX_C_SOURCE=200112)
     set(SOURCES ${SOURCES}
       src/unix/linux-core.c
