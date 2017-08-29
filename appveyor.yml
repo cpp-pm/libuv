@@ -1,39 +1,141 @@
-version: v1.14.0.build{build}
+# Windows (https://github.com/travis-ci-tester/toolchain-table)
 
-init:
-  - git config --global core.autocrlf true
+environment:
+  matrix:
+    # Note: 'default' toolchain is the same as 'vs-14-2015'
+
+    # Release {
+
+    - TOOLCHAIN: "ninja-vs-12-2013-win64"
+      CONFIG: Release
+
+    - TOOLCHAIN: "nmake-vs-12-2013-win64"
+      CONFIG: Release
+
+    - TOOLCHAIN: "nmake-vs-12-2013"
+      CONFIG: Release
+
+    # FIXME:
+    # * https://ci.appveyor.com/project/ingenue/hunter/build/1.0.2235/job/nlv02xsvga2j40yl
+    # - TOOLCHAIN: "vs-10-2010"
+    #   CONFIG: Release
+
+    # FIXME:
+    # * https://ci.appveyor.com/project/ingenue/hunter/build/1.0.2235/job/mc0p8vjwn710kw2h
+    # - TOOLCHAIN: "vs-11-2012"
+    #   CONFIG: Release
+
+    - TOOLCHAIN: "vs-12-2013-win64"
+      CONFIG: Release
+
+    - TOOLCHAIN: "vs-12-2013-xp"
+      CONFIG: Release
+
+    - TOOLCHAIN: "vs-12-2013"
+      CONFIG: Release
+
+    - TOOLCHAIN: "vs-14-2015"
+      CONFIG: Release
+
+    # Broken:
+    # - TOOLCHAIN: "vs-9-2008"
+    #   CONFIG: Release
+
+    - TOOLCHAIN: "mingw"
+      CONFIG: Release
+
+    # Broken:
+    # - TOOLCHAIN: "msys"
+    #   CONFIG: Release
+
+    # }
+
+    # Debug {
+
+    - TOOLCHAIN: "ninja-vs-12-2013-win64"
+      CONFIG: Debug
+
+    - TOOLCHAIN: "nmake-vs-12-2013-win64"
+      CONFIG: Debug
+
+    - TOOLCHAIN: "nmake-vs-12-2013"
+      CONFIG: Debug
+
+    # FIXME:
+    # * https://ci.appveyor.com/project/ingenue/hunter/build/1.0.2235/job/nlv02xsvga2j40yl
+    # - TOOLCHAIN: "vs-10-2010"
+    #   CONFIG: Debug
+
+    # FIXME:
+    # * https://ci.appveyor.com/project/ingenue/hunter/build/1.0.2235/job/mc0p8vjwn710kw2h
+    # - TOOLCHAIN: "vs-11-2012"
+    #   CONFIG: Debug
+
+    - TOOLCHAIN: "vs-12-2013-win64"
+      CONFIG: Debug
+
+    - TOOLCHAIN: "vs-12-2013-xp"
+      CONFIG: Debug
+
+    - TOOLCHAIN: "vs-12-2013"
+      CONFIG: Debug
+
+    - TOOLCHAIN: "vs-14-2015"
+      CONFIG: Debug
+
+    # Broken:
+    # - TOOLCHAIN: "vs-9-2008"
+    #   CONFIG: Debug
+
+    - TOOLCHAIN: "mingw"
+      CONFIG: Debug
+
+    # Broken:
+    # - TOOLCHAIN: "msys"
+    #   CONFIG: Debug
+
+    # }
 
 install:
-  - cinst -y nsis
+  # Python 3
+  - cmd: set PATH=C:\Python34-x64;C:\Python34-x64\Scripts;%PATH%
 
-matrix:
-  fast_finish: true
-  allow_failures:
-    - platform: x86
-      configuration: Release
-    - platform: x64
-      configuration: Release
+  # Install Python package 'requests'
+  - cmd: pip install requests
 
-platform:
-  - x86
-  - x64
+  # Install latest Polly toolchains and scripts
+  - cmd: appveyor DownloadFile https://github.com/ruslo/polly/archive/master.zip
+  - cmd: 7z x master.zip
+  - cmd: set POLLY_ROOT=%cd%\polly-master
 
-configuration:
-  - Release
+  # Install dependencies (CMake, Ninja)
+  - cmd: python %POLLY_ROOT%\bin\install-ci-dependencies.py
+
+  # Tune locations
+  - cmd: set PATH=%cd%\_ci\cmake\bin;%PATH%
+  - cmd: set PATH=%cd%\_ci\ninja;%PATH%
+
+  - cmd: git submodule update --init --recursive
+
+  # Remove entry with sh.exe from PATH to fix error with MinGW toolchain
+  # (For MinGW make to work correctly sh.exe must NOT be in your path)
+  # * http://stackoverflow.com/a/3870338/2288008
+  - cmd: set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+
+  # Use MinGW from Qt tools because version is higher
+  # * http://www.appveyor.com/docs/installed-software#qt
+  - cmd: set MINGW_PATH=C:\Qt\Tools\mingw492_32\bin
+
+  # MSYS2 location
+  - cmd: set MSYS_PATH=C:\msys64\usr\bin
 
 build_script:
-  # Fixed tag version number if using a tag.
-  - cmd: if "%APPVEYOR_REPO_TAG%" == "true" set APPVEYOR_BUILD_VERSION=%APPVEYOR_REPO_TAG_NAME%
-  # vcbuild overwrites the platform variable.
-  - cmd: set ARCH=%platform%
-  - cmd: vcbuild.bat release %ARCH% shared
+  - cmd: python %POLLY_ROOT%\bin\polly.py --toolchain %TOOLCHAIN% --config %CONFIG% --verbose --install
 
-after_build:
-  - '"%PROGRAMFILES(x86)%\NSIS\makensis" /DVERSION=%APPVEYOR_BUILD_VERSION% /DARCH=%ARCH% libuv.nsi'
-
-artifacts:
-  - name: Installer
-    path: 'libuv-*.exe'
-
-cache:
-  - C:\projects\libuv\build\gyp
+# http://www.appveyor.com/docs/branches#white-and-blacklisting
+# Exclude branch 'pkg.template'. Nothing to build there.
+branches:
+  except:
+    - pkg.template
+    - /^pr\..*/
+    - /^v[0-9]+\.[0-9]+\.[0-9]+$/
