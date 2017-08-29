@@ -114,7 +114,7 @@ endif()
 
 add_library(uv ${SOURCES})
 
-find_package(Threads)
+find_package(Threads REQUIRED)
 
 if(WIN32)
   target_link_libraries(uv ws2_32 psapi iphlpapi shell32 userenv)
