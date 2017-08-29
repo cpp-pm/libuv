@@ -31,6 +31,8 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 
+#include "uv_ssize_t.h"
+
 #if defined(__alpha__)
 # define UV__O_CLOEXEC        0x200000
 #elif defined(__hppa__)

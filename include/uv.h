@@ -47,6 +47,7 @@ extern "C" {
 
 #include "uv-errno.h"
 #include "uv-version.h"
+#include "uv_ssize_t.h"
 #include <stddef.h>
 #include <stdio.h>
 

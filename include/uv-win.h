@@ -23,12 +23,6 @@
 # define _WIN32_WINNT   0x0502
 #endif
 
-#if !defined(_SSIZE_T_) && !defined(_SSIZE_T_DEFINED)
-typedef intptr_t uv_ssize_t;
-# define _SSIZE_T_
-# define _SSIZE_T_DEFINED
-#endif
-
 #include <winsock2.h>
 
 #if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
