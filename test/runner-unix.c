@@ -150,7 +150,7 @@ static void* dowait(void* data) {
 
   if (args->pipe[1] >= 0) {
     /* Write a character to the main thread to notify it about this. */
-    ssize_t r;
+    uv_ssize_t r;
 
     do
       r = write(args->pipe[1], "", 1);

@@ -50,7 +50,7 @@ typedef struct {
   unsigned char wrstate;
   unsigned int idle_timeout;
   struct client_ctx *client;  /* Backlink to owning client context. */
-  ssize_t result;
+  uv_ssize_t result;
   union {
     uv_handle_t handle;
     uv_stream_t stream;

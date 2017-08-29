@@ -130,7 +130,7 @@
   while (0)
 
 
-static ssize_t uv__fs_fdatasync(uv_fs_t* req) {
+static uv_ssize_t uv__fs_fdatasync(uv_fs_t* req) {
 #if defined(__linux__) || defined(__sun) || defined(__NetBSD__)
   return fdatasync(req->file);
 #elif defined(__APPLE__)
@@ -146,7 +146,7 @@ static ssize_t uv__fs_fdatasync(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_fsync(uv_fs_t* req) {
+static uv_ssize_t uv__fs_fsync(uv_fs_t* req) {
 #if defined(__APPLE__)
   /* See the comment in uv__fs_fdatasync. */
   return fcntl(req->file, F_FULLFSYNC);
@@ -156,7 +156,7 @@ static ssize_t uv__fs_fsync(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_futime(uv_fs_t* req) {
+static uv_ssize_t uv__fs_futime(uv_fs_t* req) {
 #if defined(__linux__)
   /* utimesat() has nanosecond resolution but we stick to microseconds
    * for the sake of consistency with other platforms.
@@ -249,12 +249,12 @@ skip:
 }
 
 
-static ssize_t uv__fs_mkdtemp(uv_fs_t* req) {
+static uv_ssize_t uv__fs_mkdtemp(uv_fs_t* req) {
   return mkdtemp((char*) req->path) ? 0 : -1;
 }
 
 
-static ssize_t uv__fs_open(uv_fs_t* req) {
+static uv_ssize_t uv__fs_open(uv_fs_t* req) {
   static int no_cloexec_support;
   int r;
 
@@ -292,11 +292,11 @@ static ssize_t uv__fs_open(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_read(uv_fs_t* req) {
+static uv_ssize_t uv__fs_read(uv_fs_t* req) {
 #if defined(__linux__)
   static int no_preadv;
 #endif
-  ssize_t result;
+  uv_ssize_t result;
 
 #if defined(_AIX)
   struct stat buf;
@@ -382,7 +382,7 @@ static int uv__fs_scandir_sort(UV_CONST_DIRENT** a, UV_CONST_DIRENT** b) {
 }
 
 
-static ssize_t uv__fs_scandir(uv_fs_t* req) {
+static uv_ssize_t uv__fs_scandir(uv_fs_t* req) {
   uv__dirent_t **dents;
   int n;
 
@@ -408,8 +408,8 @@ static ssize_t uv__fs_scandir(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_pathmax_size(const char* path) {
-  ssize_t pathmax;
+static uv_ssize_t uv__fs_pathmax_size(const char* path) {
+  uv_ssize_t pathmax;
 
   pathmax = pathconf(path, _PC_PATH_MAX);
 
@@ -424,8 +424,8 @@ static ssize_t uv__fs_pathmax_size(const char* path) {
   return pathmax;
 }
 
-static ssize_t uv__fs_readlink(uv_fs_t* req) {
-  ssize_t len;
+static uv_ssize_t uv__fs_readlink(uv_fs_t* req) {
+  uv_ssize_t len;
   char* buf;
 
   len = uv__fs_pathmax_size(req->path);
@@ -449,8 +449,8 @@ static ssize_t uv__fs_readlink(uv_fs_t* req) {
   return 0;
 }
 
-static ssize_t uv__fs_realpath(uv_fs_t* req) {
-  ssize_t len;
+static uv_ssize_t uv__fs_realpath(uv_fs_t* req) {
+  uv_ssize_t len;
   char* buf;
 
   len = uv__fs_pathmax_size(req->path);
@@ -471,16 +471,16 @@ static ssize_t uv__fs_realpath(uv_fs_t* req) {
   return 0;
 }
 
-static ssize_t uv__fs_sendfile_emul(uv_fs_t* req) {
+static uv_ssize_t uv__fs_sendfile_emul(uv_fs_t* req) {
   struct pollfd pfd;
   int use_pread;
   off_t offset;
-  ssize_t nsent;
-  ssize_t nread;
-  ssize_t nwritten;
+  uv_ssize_t nsent;
+  uv_ssize_t nread;
+  uv_ssize_t nwritten;
   size_t buflen;
   size_t len;
-  ssize_t n;
+  uv_ssize_t n;
   int in_fd;
   int out_fd;
   char buf[8192];
@@ -585,7 +585,7 @@ out:
 }
 
 
-static ssize_t uv__fs_sendfile(uv_fs_t* req) {
+static uv_ssize_t uv__fs_sendfile(uv_fs_t* req) {
   int in_fd;
   int out_fd;
 
@@ -595,7 +595,7 @@ static ssize_t uv__fs_sendfile(uv_fs_t* req) {
 #if defined(__linux__) || defined(__sun)
   {
     off_t off;
-    ssize_t r;
+    uv_ssize_t r;
 
     off = req->off;
     r = sendfile(out_fd, in_fd, &off, req->bufsml[0].len);
@@ -626,7 +626,7 @@ static ssize_t uv__fs_sendfile(uv_fs_t* req) {
       defined(__FreeBSD_kernel__)
   {
     off_t len;
-    ssize_t r;
+    uv_ssize_t r;
 
     /* sendfile() on FreeBSD and Darwin returns EAGAIN if the target fd is in
      * non-blocking mode and not all data could be written. If a non-zero
@@ -661,7 +661,7 @@ static ssize_t uv__fs_sendfile(uv_fs_t* req) {
      */
     if (r == 0 || ((errno == EAGAIN || errno == EINTR) && len != 0)) {
       req->off += len;
-      return (ssize_t) len;
+      return (uv_ssize_t) len;
     }
 
     if (errno == EINVAL ||
@@ -684,7 +684,7 @@ static ssize_t uv__fs_sendfile(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_utime(uv_fs_t* req) {
+static uv_ssize_t uv__fs_utime(uv_fs_t* req) {
   struct utimbuf buf;
   buf.actime = req->atime;
   buf.modtime = req->mtime;
@@ -692,11 +692,11 @@ static ssize_t uv__fs_utime(uv_fs_t* req) {
 }
 
 
-static ssize_t uv__fs_write(uv_fs_t* req) {
+static uv_ssize_t uv__fs_write(uv_fs_t* req) {
 #if defined(__linux__)
   static int no_pwritev;
 #endif
-  ssize_t r;
+  uv_ssize_t r;
 
   /* Serialize writes on OS X, concurrent write() and pwrite() calls result in
    * data loss. We can't use a per-file descriptor lock, the descriptor may be
@@ -770,7 +770,7 @@ done:
   return r;
 }
 
-static ssize_t uv__fs_copyfile(uv_fs_t* req) {
+static uv_ssize_t uv__fs_copyfile(uv_fs_t* req) {
 #if defined(__APPLE__) && !TARGET_OS_IPHONE
   /* On macOS, use the native copyfile(3). */
   copyfile_flags_t flags;
@@ -979,13 +979,13 @@ static int uv__fs_fstat(int fd, uv_stat_t *buf) {
 }
 
 
-typedef ssize_t (*uv__fs_buf_iter_processor)(uv_fs_t* req);
-static ssize_t uv__fs_buf_iter(uv_fs_t* req, uv__fs_buf_iter_processor process) {
+typedef uv_ssize_t (*uv__fs_buf_iter_processor)(uv_fs_t* req);
+static uv_ssize_t uv__fs_buf_iter(uv_fs_t* req, uv__fs_buf_iter_processor process) {
   unsigned int iovmax;
   unsigned int nbufs;
   uv_buf_t* bufs;
-  ssize_t total;
-  ssize_t result;
+  uv_ssize_t total;
+  uv_ssize_t result;
 
   iovmax = uv__getiovmax();
   nbufs = req->nbufs;
@@ -1028,7 +1028,7 @@ static ssize_t uv__fs_buf_iter(uv_fs_t* req, uv__fs_buf_iter_processor process) 
 static void uv__fs_work(struct uv__work* w) {
   int retry_on_eintr;
   uv_fs_t* req;
-  ssize_t r;
+  uv_ssize_t r;
 
   req = container_of(w, uv_fs_t, work_req);
   retry_on_eintr = !(req->fs_type == UV_FS_CLOSE);
