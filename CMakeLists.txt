@@ -334,12 +334,6 @@ target_compile_options(uv PRIVATE ${uv_cflags})
 target_include_directories(uv PRIVATE include src)
 target_link_libraries(uv ${uv_libraries})
 
-add_library(uv_a STATIC ${uv_sources})
-target_compile_definitions(uv_a PRIVATE ${uv_defines})
-target_compile_options(uv_a PRIVATE ${uv_cflags})
-target_include_directories(uv_a PRIVATE include src)
-target_link_libraries(uv_a ${uv_libraries})
-
 if(BUILD_TESTING)
   include(CTest)
   add_executable(uv_run_tests ${uv_test_sources})
@@ -349,14 +343,6 @@ if(BUILD_TESTING)
   target_link_libraries(uv_run_tests uv ${uv_test_libraries})
   add_test(NAME uv_test
            COMMAND uv_run_tests
-           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-  add_executable(uv_run_tests_a ${uv_test_sources})
-  target_compile_definitions(uv_run_tests_a PRIVATE ${uv_defines})
-  target_compile_options(uv_run_tests_a PRIVATE ${uv_cflags})
-  target_include_directories(uv_run_tests_a PRIVATE include)
-  target_link_libraries(uv_run_tests_a uv_a ${uv_test_libraries})
-  add_test(NAME uv_test_a
-           COMMAND uv_run_tests_a
            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
@@ -378,5 +364,4 @@ if(UNIX)
   install(FILES LICENSE ${CMAKE_CURRENT_BINARY_DIR}/libuv.pc
           DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
   install(TARGETS uv LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  install(TARGETS uv_a ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
