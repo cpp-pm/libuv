@@ -28,7 +28,7 @@
 
 #ifndef UV__UNUSED
 # if __GNUC__
-#  define UV__UNUSED __attribute__((unused))
+#  define UV__UNUSED
 # else
 #  define UV__UNUSED
 # endif
