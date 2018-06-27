@@ -1,5 +1,5 @@
 # TODO: determine CMAKE_SYSTEM_NAME on OS/390.  Currently assumes "OS/390".
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1) # Threads::Threads
 project(libuv VERSION 1.21.0)
 enable_testing()
 
@@ -168,6 +168,9 @@ set(uv_test_sources
     test/test-walk-handles.c
     test/test-watcher-cross-stop.c)
 
+find_package(Threads REQUIRED)
+set(uv_libraries Threads::Threads)
+
 if(WIN32)
   list(APPEND uv_defines WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0600)
   list(APPEND uv_libraries
@@ -208,7 +211,6 @@ if(WIN32)
   list(APPEND uv_test_sources src/win/snprintf.c test/runner-win.c)
 else()
   list(APPEND uv_defines _FILE_OFFSET_BITS=64 _LARGEFILE_SOURCE)
-  list(APPEND uv_libraries pthread)
   list(APPEND uv_sources
        src/unix/async.c
        src/unix/core.c
