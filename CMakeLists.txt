@@ -328,11 +328,15 @@ if(CMAKE_SYSTEM_NAME MATCHES "Darwin|DragonFly|FreeBSD|Linux|NetBSD|OpenBSD")
   list(APPEND uv_test_libraries util)
 endif()
 
-add_library(uv SHARED ${uv_sources})
-target_compile_definitions(uv PRIVATE ${uv_defines} BUILDING_UV_SHARED=1)
+add_library(uv ${uv_sources})
+target_compile_definitions(uv PRIVATE ${uv_defines})
 target_compile_options(uv PRIVATE ${uv_cflags})
 target_include_directories(uv PRIVATE include src)
 target_link_libraries(uv ${uv_libraries})
+
+if(BUILD_SHARED_LIBS)
+  target_compile_definitions(uv PRIVATE BUILDING_UV_SHARED=1)
+endif()
 
 if(BUILD_TESTING)
   include(CTest)
