@@ -40,6 +40,7 @@
 #include <sys/time.h>
 #include <pthread.h>
 
+#include "uv/uv_ssize_t.h"
 
 /* Do platform-specific initialization. */
 int platform_init(int argc, char **argv) {
@@ -150,7 +151,7 @@ static void* dowait(void* data) {
 
   if (args->pipe[1] >= 0) {
     /* Write a character to the main thread to notify it about this. */
-    ssize_t r;
+    uv_ssize_t r;
 
     do
       r = write(args->pipe[1], "", 1);
