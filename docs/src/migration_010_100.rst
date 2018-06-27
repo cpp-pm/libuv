@@ -152,13 +152,13 @@ libuv 0.10
 ::
 
     void on_read(uv_stream_t* handle,
-                 ssize_t nread,
+                 uv_ssize_t nread,
                  uv_buf_t buf) {
         ...
     }
 
     void recv_cb(uv_udp_t* handle,
-                 ssize_t nread,
+                 uv_ssize_t nread,
                  uv_buf_t buf,
                  struct sockaddr* addr,
                  unsigned flags) {
@@ -170,13 +170,13 @@ libuv 1.0
 ::
 
     void on_read(uv_stream_t* handle,
-                 ssize_t nread,
+                 uv_ssize_t nread,
                  const uv_buf_t* buf) {
         ...
     }
 
     void recv_cb(uv_udp_t* handle,
-                 ssize_t nread,
+                 uv_ssize_t nread,
                  const uv_buf_t* buf,
                  const struct sockaddr* addr,
                  unsigned flags) {
@@ -194,7 +194,7 @@ for such function looked like this:
 ::
 
     void on_read(uv_pipe_t* pipe,
-                 ssize_t nread,
+                 uv_ssize_t nread,
                  uv_buf_t buf,
                  uv_handle_type pending) {
         ...
@@ -207,7 +207,7 @@ the read callback:
 ::
 
     void on_read(uv_stream_t* handle,
-                 ssize_t nread,
+                 uv_ssize_t nread,
                  const uv_buf_t* buf) {
         ...
         while (uv_pipe_pending_count((uv_pipe_t*) handle) != 0) {
