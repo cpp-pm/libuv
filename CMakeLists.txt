@@ -1,6 +1,6 @@
 # TODO: determine CMAKE_SYSTEM_NAME on OS/390.  Currently assumes "OS/390".
 cmake_minimum_required(VERSION 3.1) # Threads::Threads
-project(libuv VERSION 1.21.0)
+project(libuv VERSION 1.24.0)
 enable_testing()
 
 if(MSVC)
