@@ -188,7 +188,7 @@ static int uv__udp_recvmmsg(uv_udp_t* handle, uv_buf_t* buf) {
   struct sockaddr_in6 peers[UV__MMSG_MAXWIDTH];
   struct iovec iov[UV__MMSG_MAXWIDTH];
   struct uv__mmsghdr msgs[UV__MMSG_MAXWIDTH];
-  ssize_t nread;
+  uv_ssize_t nread;
   uv_buf_t chunk_buf;
   size_t chunks;
   int flags;
@@ -245,7 +245,7 @@ static int uv__udp_recvmmsg(uv_udp_t* handle, uv_buf_t* buf) {
 static void uv__udp_recvmsg(uv_udp_t* handle) {
   struct sockaddr_storage peer;
   struct msghdr h;
-  ssize_t nread;
+  uv_ssize_t nread;
   uv_buf_t buf;
   int flags;
   int count;
@@ -316,7 +316,7 @@ static void uv__udp_sendmmsg(uv_udp_t* handle) {
   struct uv__mmsghdr h[UV__MMSG_MAXWIDTH];
   struct uv__mmsghdr *p;
   QUEUE* q;
-  ssize_t npkts;
+  uv_ssize_t npkts;
   size_t pkts;
   size_t i;
 
@@ -405,7 +405,7 @@ static void uv__udp_sendmsg(uv_udp_t* handle) {
   uv_udp_send_t* req;
   struct msghdr h;
   QUEUE* q;
-  ssize_t size;
+  uv_ssize_t size;
 
 #if HAVE_MMSG
   uv_once(&once, uv__udp_mmsg_init);
@@ -746,7 +746,7 @@ int uv__udp_try_send(uv_udp_t* handle,
                      unsigned int addrlen) {
   int err;
   struct msghdr h;
-  ssize_t size;
+  uv_ssize_t size;
 
   assert(nbufs > 0);
 

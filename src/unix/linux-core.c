@@ -158,7 +158,7 @@ done:
 int uv_resident_set_memory(size_t* rss) {
   char buf[1024];
   const char* s;
-  ssize_t n;
+  uv_ssize_t n;
   long val;
   int fd;
   int i;
@@ -212,7 +212,7 @@ err:
 }
 
 static int uv__slurp(const char* filename, char* buf, size_t len) {
-  ssize_t n;
+  uv_ssize_t n;
   int fd;
 
   assert(len > 0);

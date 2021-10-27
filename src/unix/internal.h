@@ -204,7 +204,7 @@ int uv__close(int fd); /* preserves errno */
 int uv__close_nocheckstdio(int fd);
 int uv__close_nocancel(int fd);
 int uv__socket(int domain, int type, int protocol);
-ssize_t uv__recvmsg(int fd, struct msghdr *msg, int flags);
+uv_ssize_t uv__recvmsg(int fd, struct msghdr *msg, int flags);
 void uv__make_close_pending(uv_handle_t* handle);
 int uv__getiovmax(void);
 

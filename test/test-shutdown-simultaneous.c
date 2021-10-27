@@ -49,7 +49,7 @@ static void shutdown_cb(uv_shutdown_t *req, int status) {
 }
 
 
-static void read_cb(uv_stream_t* t, ssize_t nread, const uv_buf_t* buf) {
+static void read_cb(uv_stream_t* t, uv_ssize_t nread, const uv_buf_t* buf) {
   ASSERT_PTR_EQ((uv_tcp_t*)t, &tcp);
 
   if (nread == 0) {

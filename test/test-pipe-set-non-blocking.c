@@ -31,7 +31,7 @@ static void thread_main(void* arg) {
   uv_fs_t req;
   uv_buf_t bufs[1];
   char buf[4096];
-  ssize_t n;
+  uv_ssize_t n;
   int uv_errno;
 
   bufs[0] = uv_buf_init(buf, sizeof(buf));

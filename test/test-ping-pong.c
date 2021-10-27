@@ -117,9 +117,9 @@ static void pinger_write_ping(pinger_t* pinger) {
 
 
 static void pinger_read_cb(uv_stream_t* stream,
-                           ssize_t nread,
+                           uv_ssize_t nread,
                            const uv_buf_t* buf) {
-  ssize_t i;
+  uv_ssize_t i;
   pinger_t* pinger;
 
   pinger = (pinger_t*) stream->data;
@@ -159,7 +159,7 @@ static void pinger_read_cb(uv_stream_t* stream,
 
 
 static void ponger_read_cb(uv_stream_t* stream,
-                           ssize_t nread,
+                           uv_ssize_t nread,
                            const uv_buf_t* buf) {
   uv_buf_t writebuf;
   uv_write_t* req;

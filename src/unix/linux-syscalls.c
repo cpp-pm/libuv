@@ -193,7 +193,7 @@ int uv__recvmmsg(int fd, struct uv__mmsghdr* mmsg, unsigned int vlen) {
 }
 
 
-ssize_t uv__preadv(int fd, const struct iovec *iov, int iovcnt, int64_t offset) {
+uv_ssize_t uv__preadv(int fd, const struct iovec *iov, int iovcnt, int64_t offset) {
 #if !defined(__NR_preadv) || defined(__ANDROID_API__) && __ANDROID_API__ < 24
   return errno = ENOSYS, -1;
 #else
@@ -202,7 +202,7 @@ ssize_t uv__preadv(int fd, const struct iovec *iov, int iovcnt, int64_t offset) 
 }
 
 
-ssize_t uv__pwritev(int fd, const struct iovec *iov, int iovcnt, int64_t offset) {
+uv_ssize_t uv__pwritev(int fd, const struct iovec *iov, int iovcnt, int64_t offset) {
 #if !defined(__NR_pwritev) || defined(__ANDROID_API__) && __ANDROID_API__ < 24
   return errno = ENOSYS, -1;
 #else
@@ -220,7 +220,7 @@ int uv__dup3(int oldfd, int newfd, int flags) {
 }
 
 
-ssize_t
+uv_ssize_t
 uv__fs_copy_file_range(int fd_in,
                        off_t* off_in,
                        int fd_out,
@@ -255,7 +255,7 @@ int uv__statx(int dirfd,
 }
 
 
-ssize_t uv__getrandom(void* buf, size_t buflen, unsigned flags) {
+uv_ssize_t uv__getrandom(void* buf, size_t buflen, unsigned flags) {
 #if !defined(__NR_getrandom) || defined(__ANDROID_API__) && __ANDROID_API__ < 28
   return errno = ENOSYS, -1;
 #else

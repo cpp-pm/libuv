@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.4)
-project(libuv LANGUAGES C)
+project(libuv LANGUAGES C VERSION 1.42.0)
 
 cmake_policy(SET CMP0057 NEW) # Enable IN_LIST operator
 cmake_policy(SET CMP0064 NEW) # Support if (TEST) operator
@@ -158,10 +158,8 @@ if(WIN32)
 else()
   list(APPEND uv_defines _FILE_OFFSET_BITS=64 _LARGEFILE_SOURCE)
   if(NOT CMAKE_SYSTEM_NAME MATCHES "Android|OS390|QNX")
-    # TODO: This should be replaced with find_package(Threads) if possible
-    # Android has pthread as part of its c library, not as a separate
-    # libpthread.so.
-    list(APPEND uv_libraries pthread)
+    find_package(Threads REQUIRED)
+    list(APPEND uv_libraries Threads::Threads)
   endif()
   list(APPEND uv_sources
        src/unix/async.c
@@ -359,12 +357,11 @@ if(APPLE OR CMAKE_SYSTEM_NAME MATCHES "DragonFly|FreeBSD|Linux|NetBSD|OpenBSD")
   list(APPEND uv_test_libraries util)
 endif()
 
-add_library(uv SHARED ${uv_sources})
+add_library(uv ${uv_sources})
 target_compile_definitions(uv
   INTERFACE
     USING_UV_SHARED=1
   PRIVATE
-    BUILDING_UV_SHARED=1
     ${uv_defines})
 target_compile_options(uv PRIVATE ${uv_cflags})
 target_include_directories(uv
@@ -379,26 +376,15 @@ if(CMAKE_SYSTEM_NAME STREQUAL "OS390")
 endif()
 target_link_libraries(uv ${uv_libraries})
 
-add_library(uv_a STATIC ${uv_sources})
-target_compile_definitions(uv_a PRIVATE ${uv_defines})
-target_compile_options(uv_a PRIVATE ${uv_cflags})
-target_include_directories(uv_a
-  PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  PRIVATE
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>)
-if(CMAKE_SYSTEM_NAME STREQUAL "OS390")
-  target_include_directories(uv_a PUBLIC $<BUILD_INTERFACE:${ZOSLIB_DIR}/include>)
-  set_target_properties(uv_a PROPERTIES LINKER_LANGUAGE CXX)
+if(BUILD_SHARED_LIBS)
+  target_compile_definitions(uv PRIVATE BUILDING_UV_SHARED=1)
 endif()
-target_link_libraries(uv_a ${uv_libraries})
 
 if(LIBUV_BUILD_TESTS)
   # Small hack: use ${uv_test_sources} now to get the runner skeleton,
   # before the actual tests are added.
   add_executable(
-    uv_run_benchmarks_a
+    uv_run_benchmarks
     ${uv_test_sources}
     test/benchmark-async-pummel.c
     test/benchmark-async.c
@@ -422,9 +408,9 @@ if(LIBUV_BUILD_TESTS)
     test/echo-server.c
     test/run-benchmarks.c
     test/runner.c)
-  target_compile_definitions(uv_run_benchmarks_a PRIVATE ${uv_defines})
-  target_compile_options(uv_run_benchmarks_a PRIVATE ${uv_cflags})
-  target_link_libraries(uv_run_benchmarks_a uv_a ${uv_test_libraries})
+  target_compile_definitions(uv_run_benchmarks PRIVATE ${uv_defines})
+  target_compile_options(uv_run_benchmarks PRIVATE ${uv_cflags})
+  target_link_libraries(uv_run_benchmarks uv ${uv_test_libraries})
 
   list(APPEND uv_test_sources
        test/blackhole-server.c
@@ -607,59 +593,86 @@ if(LIBUV_BUILD_TESTS)
     set_tests_properties(uv_test PROPERTIES ENVIRONMENT
                          "LIBPATH=${CMAKE_BINARY_DIR}:$ENV{LIBPATH}")
   endif()
-  add_executable(uv_run_tests_a ${uv_test_sources} uv_win_longpath.manifest)
-  target_compile_definitions(uv_run_tests_a PRIVATE ${uv_defines})
-  target_compile_options(uv_run_tests_a PRIVATE ${uv_cflags})
-  if(QEMU)
-    target_link_libraries(uv_run_tests_a uv_a ${uv_test_libraries} -static)
-  else()
-    target_link_libraries(uv_run_tests_a uv_a ${uv_test_libraries})
-  endif()
-  add_test(NAME uv_test_a
-           COMMAND uv_run_tests_a
-           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
   if(CMAKE_SYSTEM_NAME STREQUAL "OS390")
-    set_target_properties(uv_run_benchmarks_a PROPERTIES LINKER_LANGUAGE CXX)
+    set_target_properties(uv_run_benchmarks PROPERTIES LINKER_LANGUAGE CXX)
     set_target_properties(uv_run_tests PROPERTIES LINKER_LANGUAGE CXX)
-    set_target_properties(uv_run_tests_a PROPERTIES LINKER_LANGUAGE CXX)
   endif()
 endif()
 
-if(UNIX OR MINGW)
-  # Now for some gibbering horrors from beyond the stars...
-  foreach(lib IN LISTS uv_libraries)
-    list(APPEND LIBS "-l${lib}")
-  endforeach()
-  string(REPLACE ";" " " LIBS "${LIBS}")
-  # Consider setting project version via project() call?
-  file(STRINGS configure.ac configure_ac REGEX ^AC_INIT)
-  string(REGEX MATCH "([0-9]+)[.][0-9]+[.][0-9]+" PACKAGE_VERSION "${configure_ac}")
-  set(UV_VERSION_MAJOR "${CMAKE_MATCH_1}")
-  # The version in the filename is mirroring the behaviour of autotools.
-  set_target_properties(uv PROPERTIES
-    VERSION ${UV_VERSION_MAJOR}.0.0
-    SOVERSION ${UV_VERSION_MAJOR})
-  set(includedir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR})
-  set(libdir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
-  set(prefix ${CMAKE_INSTALL_PREFIX})
-  configure_file(libuv.pc.in libuv.pc @ONLY)
-  configure_file(libuv-static.pc.in libuv-static.pc @ONLY)
+include(GNUInstallDirs)
+foreach(x ${uv_libraries})
+  set(LIBS "${LIBS} -l${x}")
+endforeach(x)
+file(STRINGS configure.ac configure_ac REGEX ^AC_INIT)
+string(REGEX MATCH [0-9]+[.][0-9]+[.][0-9]+ PACKAGE_VERSION "${configure_ac}")
 
-  install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-  install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
-  install(FILES ${PROJECT_BINARY_DIR}/libuv.pc ${PROJECT_BINARY_DIR}/libuv-static.pc
-          DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-  install(TARGETS uv LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  install(TARGETS uv_a ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-endif()
+set(includedir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR})
+set(libdir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
+set(prefix ${CMAKE_INSTALL_PREFIX})
+configure_file(libuv.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libuv.pc @ONLY)
 
-if(MSVC)
-  install(DIRECTORY include/ DESTINATION include)
-  install(FILES LICENSE DESTINATION .)
-  install(TARGETS uv uv_a
-          RUNTIME DESTINATION lib/$<CONFIG>
-          ARCHIVE DESTINATION lib/$<CONFIG>)
-endif()
+install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libuv.pc
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+### Installation (https://github.com/forexample/package-example) {
+
+# Introduce variables:
+# * CMAKE_INSTALL_LIBDIR
+# * CMAKE_INSTALL_BINDIR
+# * CMAKE_INSTALL_INCLUDEDIR
+include(GNUInstallDirs)
+
+set(config_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
+set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
+set(TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets")
+set(namespace "${PROJECT_NAME}::")
+
+include(CMakePackageConfigHelpers)
+
+# Use:
+# * PROJECT_VERSION
+write_basic_package_version_file(
+    "${version_config}" COMPATIBILITY SameMajorVersion
+)
+
+# Use:
+# * TARGETS_EXPORT_NAME
+# * PROJECT_NAME
+configure_package_config_file(
+    "cmake/template/Config.cmake.in"
+    "${project_config}"
+    INSTALL_DESTINATION "${config_install_dir}"
+)
+
+install(
+    DIRECTORY include/
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+)
+
+install(
+    FILES "${project_config}" "${version_config}"
+    DESTINATION "${config_install_dir}"
+)
+
+install(
+    EXPORT "${TARGETS_EXPORT_NAME}"
+    NAMESPACE "${namespace}"
+    DESTINATION "${config_install_dir}"
+)
+
+### }
+
+install(
+    TARGETS uv
+    EXPORT "${TARGETS_EXPORT_NAME}"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+)
 
 message(STATUS "summary of build options:
     Install prefix:  ${CMAKE_INSTALL_PREFIX}
