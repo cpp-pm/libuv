@@ -50,7 +50,7 @@ static void close_cb(uv_handle_t* handle) {
   close_cb_called++;
 }
 
-static void read_cb(uv_stream_t* handle, ssize_t nread, const uv_buf_t* buf) {
+static void read_cb(uv_stream_t* handle, uv_ssize_t nread, const uv_buf_t* buf) {
   read_cb_called++;
 
   ASSERT((nread < 0) && (nread != UV_EOF));

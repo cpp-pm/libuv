@@ -708,7 +708,7 @@ static void uv__drain(uv_stream_t* stream) {
 }
 
 
-static ssize_t uv__writev(int fd, struct iovec* vec, size_t n) {
+static uv_ssize_t uv__writev(int fd, struct iovec* vec, size_t n) {
   if (n == 1)
     return write(fd, vec->iov_base, vec->iov_len);
   else
@@ -806,7 +806,7 @@ static int uv__try_write(uv_stream_t* stream,
   struct iovec* iov;
   int iovmax;
   int iovcnt;
-  ssize_t n;
+  uv_ssize_t n;
 
   /*
    * Cast to iovec. We had to have our own uv_buf_t instead of iovec
@@ -885,7 +885,7 @@ static int uv__try_write(uv_stream_t* stream,
 static void uv__write(uv_stream_t* stream) {
   QUEUE* q;
   uv_write_t* req;
-  ssize_t n;
+  uv_ssize_t n;
 
   assert(uv__stream_fd(stream) >= 0);
 
@@ -1124,7 +1124,7 @@ static int uv__stream_recv_cmsg(uv_stream_t* stream, struct msghdr* msg) {
 
 static void uv__read(uv_stream_t* stream) {
   uv_buf_t buf;
-  ssize_t nread;
+  uv_ssize_t nread;
   struct msghdr msg;
   char cmsg_space[CMSG_SPACE(UV__CMSG_FD_SIZE)];
   int count;
@@ -1212,7 +1212,7 @@ static void uv__read(uv_stream_t* stream) {
       return;
     } else {
       /* Successful read */
-      ssize_t buflen = buf.len;
+      uv_ssize_t buflen = buf.len;
 
       if (is_ipc) {
         err = uv__stream_recv_cmsg(stream, &msg);

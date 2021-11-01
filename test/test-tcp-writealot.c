@@ -81,7 +81,7 @@ static void shutdown_cb(uv_shutdown_t* req, int status) {
 }
 
 
-static void read_cb(uv_stream_t* tcp, ssize_t nread, const uv_buf_t* buf) {
+static void read_cb(uv_stream_t* tcp, uv_ssize_t nread, const uv_buf_t* buf) {
   ASSERT_NOT_NULL(tcp);
 
   if (nread >= 0) {

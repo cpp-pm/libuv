@@ -79,7 +79,7 @@ static void alloc_cb(uv_handle_t* handle, size_t size, uv_buf_t* buf) {
   buf->len = sizeof(slab);
 }
 
-static void read_cb2(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+static void read_cb2(uv_stream_t* stream, uv_ssize_t nread, const uv_buf_t* buf) {
   ASSERT((uv_tcp_t*)stream == &tcp_client);
   if (nread == UV_EOF)
     uv_close((uv_handle_t*) stream, NULL);
@@ -122,7 +122,7 @@ static void shutdown_cb(uv_shutdown_t* req, int status) {
 }
 
 
-static void read_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+static void read_cb(uv_stream_t* stream, uv_ssize_t nread, const uv_buf_t* buf) {
   ASSERT((uv_tcp_t*)stream == &tcp_accepted);
   if (nread < 0) {
     uv_close((uv_handle_t*) stream, NULL);

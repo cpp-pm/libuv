@@ -36,7 +36,7 @@ void uv_loadavg(double avg[3]) {
 int uv_exepath(char* buffer, size_t* size) {
   char abspath[B_PATH_NAME_LENGTH];
   status_t status;
-  ssize_t abspath_len;
+  uv_ssize_t abspath_len;
 
   if (buffer == NULL || size == NULL || *size == 0)
     return UV_EINVAL;
@@ -86,7 +86,7 @@ uint64_t uv_get_constrained_memory(void) {
 
 int uv_resident_set_memory(size_t* rss) {
   area_info area;
-  ssize_t cookie;
+  uv_ssize_t cookie;
   status_t status;
   thread_info thread;
 

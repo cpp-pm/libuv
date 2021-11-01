@@ -33,7 +33,7 @@
 #include <stddef.h>
 #include <dlfcn.h>
 
-typedef ssize_t (*uv__getrandom_cb)(void *, size_t, unsigned);
+typedef uv_ssize_t (*uv__getrandom_cb)(void *, size_t, unsigned);
 
 static uv__getrandom_cb uv__getrandom;
 static uv_once_t once = UV_ONCE_INIT;
@@ -54,7 +54,7 @@ static int uv__random_getrandom_init(void) {
 #endif  /* !__linux__ */
 
 int uv__random_getrandom(void* buf, size_t buflen) {
-  ssize_t n;
+  uv_ssize_t n;
   size_t pos;
   int rc;
 

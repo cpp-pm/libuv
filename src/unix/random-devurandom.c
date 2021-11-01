@@ -32,7 +32,7 @@ static int status;
 int uv__random_readpath(const char* path, void* buf, size_t buflen) {
   struct stat s;
   size_t pos;
-  ssize_t n;
+  uv_ssize_t n;
   int fd;
 
   fd = uv__open_cloexec(path, O_RDONLY);

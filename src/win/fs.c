@@ -146,7 +146,7 @@ INLINE static int fs__capture_path(uv_fs_t* req, const char* path,
     const char* new_path, const int copy_path) {
   char* buf;
   char* pos;
-  ssize_t buf_sz = 0, path_len = 0, pathw_len = 0, new_pathw_len = 0;
+  uv_ssize_t buf_sz = 0, path_len = 0, pathw_len = 0, new_pathw_len = 0;
 
   /* new_path can only be set if path is also set. */
   assert(new_path == NULL || path != NULL);
@@ -2604,7 +2604,7 @@ static void fs__readlink(uv_fs_t* req) {
 }
 
 
-static ssize_t fs__realpath_handle(HANDLE handle, char** realpath_ptr) {
+static uv_ssize_t fs__realpath_handle(HANDLE handle, char** realpath_ptr) {
   int r;
   DWORD w_realpath_len;
   WCHAR* w_realpath_ptr = NULL;

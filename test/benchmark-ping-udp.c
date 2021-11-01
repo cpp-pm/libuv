@@ -86,11 +86,11 @@ static void pinger_write_ping(pinger_t* pinger) {
 }
 
 static void pinger_read_cb(uv_udp_t* udp,
-                           ssize_t nread,
+                           uv_ssize_t nread,
                            const uv_buf_t* buf,
                            const struct sockaddr* addr,
                            unsigned flags) {
-  ssize_t i;
+  uv_ssize_t i;
   pinger_t* pinger;
   pinger = (pinger_t*)udp->data;
 

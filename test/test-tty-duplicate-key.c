@@ -35,17 +35,17 @@
 
 
 const char* expect_str = NULL;
-ssize_t expect_nread = 0;
+uv_ssize_t expect_nread = 0;
 
-static void dump_str(const char* str, ssize_t len) {
-  ssize_t i;
+static void dump_str(const char* str, uv_ssize_t len) {
+  uv_ssize_t i;
   for (i = 0; i < len; i++) {
     fprintf(stderr, "%#02x ", *(str + i));
   }
 }
 
-static void print_err_msg(const char* expect, ssize_t expect_len,
-                          const char* found, ssize_t found_len) {
+static void print_err_msg(const char* expect, uv_ssize_t expect_len,
+                          const char* found, uv_ssize_t found_len) {
   fprintf(stderr, "expect ");
   dump_str(expect, expect_len);
   fprintf(stderr, ", but found ");
@@ -59,7 +59,7 @@ static void tty_alloc(uv_handle_t* handle, size_t size, uv_buf_t* buf) {
   buf->len = size;
 }
 
-static void tty_read(uv_stream_t* tty_in, ssize_t nread, const uv_buf_t* buf) {
+static void tty_read(uv_stream_t* tty_in, uv_ssize_t nread, const uv_buf_t* buf) {
   if (nread > 0) {
     if (nread != expect_nread) {
       fprintf(stderr, "expected nread %ld, but found %ld\n",

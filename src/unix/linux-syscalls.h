@@ -28,6 +28,8 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 
+#include "uv/uv_ssize_t.h"
+
 struct uv__statx_timestamp {
   int64_t tv_sec;
   uint32_t tv_nsec;
@@ -58,10 +60,10 @@ struct uv__statx {
   uint64_t unused1[14];
 };
 
-ssize_t uv__preadv(int fd, const struct iovec *iov, int iovcnt, int64_t offset);
-ssize_t uv__pwritev(int fd, const struct iovec *iov, int iovcnt, int64_t offset);
+uv_ssize_t uv__preadv(int fd, const struct iovec *iov, int iovcnt, int64_t offset);
+uv_ssize_t uv__pwritev(int fd, const struct iovec *iov, int iovcnt, int64_t offset);
 int uv__dup3(int oldfd, int newfd, int flags);
-ssize_t
+uv_ssize_t
 uv__fs_copy_file_range(int fd_in,
                        off_t* off_in,
                        int fd_out,
@@ -73,6 +75,6 @@ int uv__statx(int dirfd,
               int flags,
               unsigned int mask,
               struct uv__statx* statxbuf);
-ssize_t uv__getrandom(void* buf, size_t buflen, unsigned flags);
+uv_ssize_t uv__getrandom(void* buf, size_t buflen, unsigned flags);
 
 #endif /* UV_LINUX_SYSCALL_H_ */

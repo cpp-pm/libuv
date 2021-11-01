@@ -30,7 +30,7 @@ static uv_tcp_t client;
 static uv_connect_t connect_req;
 
 
-static void on_read2(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf);
+static void on_read2(uv_stream_t* stream, uv_ssize_t nread, const uv_buf_t* buf);
 
 static void on_write_close_immediately(uv_write_t* req, int status) {
   ASSERT(0 == status);
@@ -61,7 +61,7 @@ static void on_alloc(uv_handle_t* handle,
   buf->len = sizeof(slab);
 }
 
-static void on_read1(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+static void on_read1(uv_stream_t* stream, uv_ssize_t nread, const uv_buf_t* buf) {
   ASSERT(nread >= 0);
 
   /* Do write on a half open connection to force WSAECONNABORTED (on Windows)
@@ -76,7 +76,7 @@ static void on_read1(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
   read_cb_called++;
 }
 
-static void on_read2(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+static void on_read2(uv_stream_t* stream, uv_ssize_t nread, const uv_buf_t* buf) {
   ASSERT(nread < 0);
 
   uv_close((uv_handle_t*)stream, NULL);
