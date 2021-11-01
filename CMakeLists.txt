@@ -582,10 +582,14 @@ if(LIBUV_BUILD_TESTS)
        test/test-watcher-cross-stop.c)
 
   add_executable(uv_run_tests ${uv_test_sources} uv_win_longpath.manifest)
-  target_compile_definitions(uv_run_tests
-                             PRIVATE ${uv_defines} USING_UV_SHARED=1)
+  target_compile_definitions(uv_run_tests PRIVATE ${uv_defines})
   target_compile_options(uv_run_tests PRIVATE ${uv_cflags})
-  target_link_libraries(uv_run_tests uv ${uv_test_libraries})
+  if(QEMU)
+    target_link_libraries(uv_run_tests uv ${uv_test_libraries} -static)
+  else()
+    target_link_libraries(uv_run_tests uv ${uv_test_libraries})
+  endif()
+
   add_test(NAME uv_test
            COMMAND uv_run_tests
            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
